@@ -2,16 +2,19 @@ import * as React from 'react'
 import {Component, ReactNode} from 'react'
 
 interface Props {
-  loadMore: Function
-  loader: ReactNode
-  throttle: number
-  getScrollParent?: () => HTMLElement
-  useWindow?: boolean
+  loadMore: (pageLoaded: number) => void // 加载更多的回调
+  loader: ReactNode // 显示 Loading 的元素
+  throttle: number // offset 临界值，小于则开始加载
+  hasMore?: boolean // 是否还有更多可以加载
+  pageStart?: number // 页面初始页
+  getScrollParent?: () => HTMLElement // 获取 parentElement 的回调
+  useWindow?: boolean // 是否以 window 作为 scrollEl
 }
 
 class InfiniteScroll extends Component<Props, any> {
   private scrollComponent: HTMLDivElement | null = null // 当前滚动的组件
   private loadingMore = false // 是否正在加载更多
+  private pageLoaded = 0 // 当前加载页数
 
   constructor(props: Props) {
     super(props);
@@ -39,7 +42,7 @@ class InfiniteScroll extends Component<Props, any> {
     if (offset < this.props.throttle) {
       node.removeEventListener('scroll', this.scrollListener)
 
-      this.props.loadMore()
+      this.props.loadMore(this.pageLoaded += 1)
       this.loadingMore = true
     }
   }
@@ -69,7 +72,7 @@ class InfiniteScroll extends Component<Props, any> {
   attachScrollListener() {
     const parentElement = this.getParentElement(this.scrollComponent)
 
-    if (!parentElement) return
+    if (!parentElement || !this.props.hasMore) return
 
     const scrollEl = this.props.useWindow ? window : parentElement
 
@@ -86,6 +89,7 @@ class InfiniteScroll extends Component<Props, any> {
 
   componentDidMount() {
     this.attachScrollListener()
+    this.pageLoaded = this.props.pageStart || 0
   }
 
   componentWillUnmount() {
@@ -93,12 +97,12 @@ class InfiniteScroll extends Component<Props, any> {
   }
 
   render() {
-    const {children, loader} = this.props
+    const {children, loader, hasMore} = this.props
 
     return (
       <div ref={node => this.scrollComponent = node}>
         {children}
-        {loader}
+        {hasMore && loader}
       </div>
     )
   }
