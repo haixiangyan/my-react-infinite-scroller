@@ -1,5 +1,5 @@
 import * as React from 'react'
-import {Component, ReactNode} from 'react'
+import {Component, createElement, ReactNode} from 'react'
 
 interface EventListenerOptions {
   useCapture: boolean
@@ -9,7 +9,10 @@ interface EventListenerOptions {
 interface Props {
   loadMore: (pageLoaded: number) => void // 加载更多的回调
   loader: ReactNode // 显示 Loading 的元素
-  throttle?: number // offset 临界值，小于则开始加载
+  initialLoad?: boolean // 是否第一次就加载
+  element?: string // 元素 tag 名
+  ref?: (node: HTMLElement | null) => void // 获取要滚动的元素
+  threshold?: number // offset 临界值，小于则开始加载
   isReverse?: boolean // 是否为相反的无限滚动
   hasMore?: boolean // 是否还有更多可以加载
   pageStart?: number // 页面初始页
@@ -19,7 +22,7 @@ interface Props {
 }
 
 class InfiniteScroll extends Component<Props, any> {
-  private scrollComponent: HTMLDivElement | null = null // 当前滚动的组件
+  private scrollComponent: HTMLElement | null = null // 当前滚动的组件
   private loadingMore = false // 是否正在加载更多
   private pageLoaded = 0 // 当前加载页数
   private eventOptions = {} // 注册事件的选项
@@ -29,7 +32,9 @@ class InfiniteScroll extends Component<Props, any> {
 
   // 默认 props
   static defaultProps = {
-    throttle: 300,
+    initialLoad: true,
+    element: 'div',
+    threshold: 300,
     isReverse: false,
     hasMore: true,
     pageStart: 0,
@@ -56,11 +61,13 @@ class InfiniteScroll extends Component<Props, any> {
     }
 
     try {
-      const testListener = () => {}
+      const testListener = () => {
+      }
       document.addEventListener('test', testListener, testOptions)
       // @ts-ignore 仅用于测试是否可以使用 passive listener
       document.removeEventListener('test', testListener, testOptions)
-    } catch (e) {}
+    } catch (e) {
+    }
 
     return passive
   }
@@ -95,7 +102,7 @@ class InfiniteScroll extends Component<Props, any> {
       offset = el.scrollHeight - parentNode.scrollTop - parentNode.clientHeight
     }
 
-    if (offset < (this.props.throttle || 300)) {
+    if (offset < (this.props.threshold || 300)) {
       this.detachListeners()
       this.beforeScrollTop = parentNode.scrollTop
       this.beforeScrollHeight = parentNode.scrollHeight
@@ -147,6 +154,10 @@ class InfiniteScroll extends Component<Props, any> {
     scrollEl.addEventListener('scroll', this.scrollListener, this.eventOptions)
     scrollEl.addEventListener('resize', this.scrollListener, this.eventOptions)
     scrollEl.addEventListener('mousewheel', this.mousewheelListener, this.eventOptions)
+
+    if (this.props.initialLoad) {
+      this.scrollListener()
+    }
   }
 
   detachMousewheelListener() {
@@ -190,7 +201,13 @@ class InfiniteScroll extends Component<Props, any> {
   }
 
   render() {
-    const {children, loader, hasMore, isReverse} = this.props
+    const {
+      // 内部 props
+      children, element, hasMore, isReverse, loader, loadMore, initialLoad,
+      pageStart, ref, threshold, useCapture, useWindow, getScrollParent,
+      // 需要 pass 的 props
+      ...props
+    } = this.props
 
     const childrenArray = [children]
 
@@ -198,11 +215,17 @@ class InfiniteScroll extends Component<Props, any> {
       isReverse ? childrenArray.unshift(loader) : childrenArray.push(loader)
     }
 
-    return (
-      <div ref={node => this.scrollComponent = node}>
-        {childrenArray}
-      </div>
-    )
+    const passProps = {
+      ...props,
+      ref: (node: HTMLElement | null) => {
+        this.scrollComponent = node
+        if (ref) {
+          ref(node)
+        }
+      }
+    }
+
+    return createElement(element || 'div', passProps, childrenArray)
   }
 }
 

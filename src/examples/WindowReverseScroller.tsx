@@ -21,10 +21,6 @@ const WindowReverseScroller = () => {
   }
 
   useEffect(() => {
-    window.scroll(0, 9999)
-  }, [items])
-
-  useEffect(() => {
     fetchMore().then()
   }, [])
 
@@ -33,7 +29,7 @@ const WindowReverseScroller = () => {
       <InfiniteScroll
         useWindow
         isReverse
-        throttle={300}
+        threshold={300}
         loadMore={fetchMore}
         loader={<div className="loader" key={0}>Loading ...</div>}
       >

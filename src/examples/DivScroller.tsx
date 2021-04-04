@@ -28,7 +28,7 @@ const DivScroller = () => {
     <div style={{height: 250, overflow: 'auto', border: '1px solid red'}}>
       <InfiniteScroll
         useWindow={false}
-        throttle={50}
+        threshold={50}
         loadMore={fetchMore}
         loader={<div className="loader" key={0}>Loading ...</div>}
       >
