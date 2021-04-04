@@ -4,7 +4,7 @@ import {delay} from './utils'
 
 let counter = 0
 
-const DivScroller = () => {
+const WindowReverseScroller = () => {
   const [items, setItems] = useState<string[]>([]);
 
   const fetchMore = async () => {
@@ -21,6 +21,10 @@ const DivScroller = () => {
   }
 
   useEffect(() => {
+    window.scroll(0, 9999)
+  }, [items])
+
+  useEffect(() => {
     fetchMore().then()
   }, [])
 
@@ -28,14 +32,15 @@ const DivScroller = () => {
     <div style={{border: '1px solid blue'}}>
       <InfiniteScroll
         useWindow
+        isReverse
         throttle={300}
         loadMore={fetchMore}
         loader={<div className="loader" key={0}>Loading ...</div>}
       >
-        {items.map(item => <div key={item}>{item}</div>)}
+        {items.slice().reverse().map(item => <div key={item}>{item}</div>)}
       </InfiniteScroll>
     </div>
   )
 }
 
-export default DivScroller
+export default WindowReverseScroller

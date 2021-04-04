@@ -4,7 +4,8 @@ import {Component, ReactNode} from 'react'
 interface Props {
   loadMore: (pageLoaded: number) => void // 加载更多的回调
   loader: ReactNode // 显示 Loading 的元素
-  throttle: number // offset 临界值，小于则开始加载
+  throttle?: number // offset 临界值，小于则开始加载
+  isReverse?: boolean // 是否为相反的无限滚动
   hasMore?: boolean // 是否还有更多可以加载
   pageStart?: number // 页面初始页
   getScrollParent?: () => HTMLElement // 获取 parentElement 的回调
@@ -15,10 +16,14 @@ class InfiniteScroll extends Component<Props, any> {
   private scrollComponent: HTMLDivElement | null = null // 当前滚动的组件
   private loadingMore = false // 是否正在加载更多
   private pageLoaded = 0 // 当前加载页数
+  // isReverse 后专用参数
+  private beforeScrollTop = 0 // 上次滚动时 parentNode 的 scrollTop
+  private beforeScrollHeight = 0 // 上次滚动时 parentNode 的 scrollHeight
 
   // 默认 props
   static defaultProps = {
     throttle: 300,
+    isReverse: false,
     hasMore: true,
     pageStart: 0,
     getScrollParent: null,
@@ -43,13 +48,17 @@ class InfiniteScroll extends Component<Props, any> {
       const doc = document.documentElement || document.body.parentNode || document.body
       const scrollTop = window.pageYOffset || doc.scrollTop
 
-      offset = this.calculateOffset(el, scrollTop)
+      offset = this.props.isReverse ? scrollTop : this.calculateOffset(el, scrollTop)
+    } else if (this.props.isReverse) {
+      offset = parentNode.scrollTop
     } else {
       offset = el.scrollHeight - parentNode.scrollTop - parentNode.clientHeight
     }
 
-    if (offset < this.props.throttle) {
+    if (offset < (this.props.throttle || 300)) {
       this.detachScrollListener()
+      this.beforeScrollTop = parentNode.scrollTop
+      this.beforeScrollHeight = parentNode.scrollHeight
 
       if (this.props.loadMore) {
         this.props.loadMore(this.pageLoaded += 1)
@@ -106,6 +115,14 @@ class InfiniteScroll extends Component<Props, any> {
   }
 
   componentDidUpdate() {
+    if (this.props.isReverse && this.props.loadMore) {
+      const parentElement = this.getParentElement(this.scrollComponent)
+
+      if (parentElement) {
+        parentElement.scrollTop = parentElement.scrollHeight - this.beforeScrollHeight + this.beforeScrollTop
+        this.loadingMore = false
+      }
+    }
     this.attachScrollListener()
   }
 
@@ -114,12 +131,17 @@ class InfiniteScroll extends Component<Props, any> {
   }
 
   render() {
-    const {children, loader, hasMore} = this.props
+    const {children, loader, hasMore, isReverse} = this.props
+
+    const childrenArray = [children]
+
+    if (hasMore && loader) {
+      isReverse ? childrenArray.unshift(loader) : childrenArray.push(loader)
+    }
 
     return (
       <div ref={node => this.scrollComponent = node}>
-        {children}
-        {hasMore && loader}
+        {childrenArray}
       </div>
     )
   }

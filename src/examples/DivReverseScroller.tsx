@@ -1,41 +1,50 @@
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useState, useRef} from 'react'
 import InfiniteScroll from '../lib/InfiniteScroll'
 import {delay} from './utils'
 
 let counter = 0
 
-const DivScroller = () => {
+const DivReverseScroller = () => {
   const [items, setItems] = useState<string[]>([]);
+
+  const parentRef = useRef<HTMLDivElement>(null)
 
   const fetchMore = async () => {
     await delay(async () => {
       const newItems = []
 
-      for (let i = counter; i < counter + 150; i++) {
+      for (let i = counter; i < counter + 50; i++) {
         newItems.push(`Counter: ${i} |||| ${new Date().toISOString()}`)
       }
       setItems([...items, ...newItems])
 
-      counter += 150
+      counter += 50
     })
   }
+
+  useEffect(() => {
+    // if (parentRef.current) {
+    //   parentRef.current.scroll(0, 9999)
+    // }
+  }, [items])
 
   useEffect(() => {
     fetchMore().then()
   }, [])
 
   return (
-    <div style={{border: '1px solid blue'}}>
+    <div ref={parentRef} style={{height: 250, overflow: 'auto', border: '1px solid red'}}>
       <InfiniteScroll
-        useWindow
-        throttle={300}
+        isReverse
+        useWindow={false}
+        throttle={50}
         loadMore={fetchMore}
         loader={<div className="loader" key={0}>Loading ...</div>}
       >
-        {items.map(item => <div key={item}>{item}</div>)}
+        {items.slice().reverse().map(item => <div key={item}>{item}</div>)}
       </InfiniteScroll>
     </div>
   )
 }
 
-export default DivScroller
+export default DivReverseScroller
