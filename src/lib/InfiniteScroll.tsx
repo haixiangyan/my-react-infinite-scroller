@@ -45,9 +45,33 @@ class InfiniteScroll extends Component<Props, any> {
 
   constructor(props: Props) {
     super(props);
-    this.getEventListenerOptions = this.getEventListenerOptions.bind(this)
+
     this.scrollListener = this.scrollListener.bind(this)
+    this.getEventListenerOptions = this.getEventListenerOptions.bind(this)
     this.mousewheelListener = this.mousewheelListener.bind(this)
+  }
+
+  componentDidMount() {
+    this.pageLoaded = this.props.pageStart || 0
+    this.eventOptions = this.getEventListenerOptions()
+    this.attachListeners()
+  }
+
+  componentDidUpdate() {
+    if (this.props.isReverse && this.loadingMore) {
+      const parentElement = this.getParentElement(this.scrollComponent)
+
+      if (parentElement) {
+        parentElement.scrollTop = parentElement.scrollHeight - this.beforeScrollHeight + this.beforeScrollTop
+        this.loadingMore = false
+      }
+    }
+    this.attachListeners()
+  }
+
+  componentWillUnmount() {
+    this.detachListeners()
+    this.detachMousewheelListener()
   }
 
   isPassiveSupported() {
@@ -86,26 +110,27 @@ class InfiniteScroll extends Component<Props, any> {
     const el = this.scrollComponent
     if (!el) return
 
-    const parentNode = this.getParentElement(el)
-    if (!parentNode) return
+    const parentElement = this.getParentElement(el)
+    if (!parentElement) return
 
     let offset;
 
     if (this.props.useWindow) {
-      const doc = document.documentElement || document.body.parentNode || document.body
+      const doc = document.documentElement || document.body.parentElement || document.body
       const scrollTop = window.pageYOffset || doc.scrollTop
 
       offset = this.props.isReverse ? scrollTop : this.calculateOffset(el, scrollTop)
-    } else if (this.props.isReverse) {
-      offset = parentNode.scrollTop
     } else {
-      offset = el.scrollHeight - parentNode.scrollTop - parentNode.clientHeight
+      offset = this.props.isReverse
+        ? parentElement.scrollTop
+        : el.scrollHeight - parentElement.scrollTop - parentElement.clientHeight
     }
 
-    if (offset < (this.props.threshold || 300)) {
+    // 是否到达阈值，是否可见
+    if (offset < (this.props.threshold || 300) && (el && el.offsetParent !== null)) {
       this.detachListeners()
-      this.beforeScrollTop = parentNode.scrollTop
-      this.beforeScrollHeight = parentNode.scrollHeight
+      this.beforeScrollHeight = parentElement.scrollHeight
+      this.beforeScrollTop = parentElement.scrollTop
 
       if (this.props.loadMore) {
         this.props.loadMore(this.pageLoaded += 1)
@@ -125,7 +150,7 @@ class InfiniteScroll extends Component<Props, any> {
   calculateOffset(el: HTMLElement | null, scrollTop: number) {
     if (!el) return 0
 
-    return this.calculateTopPosition(el) + el.offsetHeight - scrollTop - window.innerHeight
+    return this.calculateTopPosition(el) + (el.offsetHeight - scrollTop - window.innerHeight)
   }
 
   calculateTopPosition(el: HTMLElement | null): number {
@@ -151,9 +176,9 @@ class InfiniteScroll extends Component<Props, any> {
 
     const scrollEl = this.props.useWindow ? window : parentElement
 
+    scrollEl.addEventListener('mousewheel', this.mousewheelListener, this.eventOptions)
     scrollEl.addEventListener('scroll', this.scrollListener, this.eventOptions)
     scrollEl.addEventListener('resize', this.scrollListener, this.eventOptions)
-    scrollEl.addEventListener('mousewheel', this.mousewheelListener, this.eventOptions)
 
     if (this.props.initialLoad) {
       this.scrollListener()
@@ -175,29 +200,6 @@ class InfiniteScroll extends Component<Props, any> {
 
     scrollEl.removeEventListener('scroll', this.scrollListener, this.eventOptions)
     scrollEl.removeEventListener('resize', this.scrollListener, this.eventOptions)
-  }
-
-  componentDidMount() {
-    this.pageLoaded = this.props.pageStart || 0
-    this.eventOptions = this.getEventListenerOptions()
-    this.attachListeners()
-  }
-
-  componentDidUpdate() {
-    if (this.props.isReverse && this.props.loadMore) {
-      const parentElement = this.getParentElement(this.scrollComponent)
-
-      if (parentElement) {
-        parentElement.scrollTop = parentElement.scrollHeight - this.beforeScrollHeight + this.beforeScrollTop
-        this.loadingMore = false
-      }
-    }
-    this.attachListeners()
-  }
-
-  componentWillUnmount() {
-    this.detachListeners()
-    this.detachMousewheelListener()
   }
 
   render() {

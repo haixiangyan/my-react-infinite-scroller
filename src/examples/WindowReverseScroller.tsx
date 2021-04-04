@@ -29,7 +29,6 @@ const WindowReverseScroller = () => {
       <InfiniteScroll
         useWindow
         isReverse
-        threshold={300}
         loadMore={fetchMore}
         loader={<div className="loader" key={0}>Loading ...</div>}
       >

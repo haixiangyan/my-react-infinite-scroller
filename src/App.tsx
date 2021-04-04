@@ -11,6 +11,8 @@ const App = () => {
 
   return (
     <div>
+      {pane === '4' && <WindowReverseScroller/>}
+
       <div>
         <button onClick={() => setPane('1')}>Div 向下无限滚动</button>
         <button onClick={() => setPane('2')}>Window 向下无限滚动</button>
@@ -22,7 +24,6 @@ const App = () => {
         {pane === '1' && <DivScroller/>}
         {pane === '2' && <WindowScroller/>}
         {pane === '3' && <DivReverseScroller/>}
-        {pane === '4' && <WindowReverseScroller/>}
       </div>
     </div>
   )
