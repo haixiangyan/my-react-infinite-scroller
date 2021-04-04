@@ -16,34 +16,47 @@ class InfiniteScroll extends Component<Props, any> {
   private loadingMore = false // 是否正在加载更多
   private pageLoaded = 0 // 当前加载页数
 
+  // 默认 props
+  static defaultProps = {
+    throttle: 300,
+    hasMore: true,
+    pageStart: 0,
+    getScrollParent: null,
+    useWindow: true
+  }
+
   constructor(props: Props) {
     super(props);
     this.scrollListener = this.scrollListener.bind(this)
   }
 
   scrollListener() {
-    const node = this.scrollComponent
-    if (!node) return
+    const el = this.scrollComponent
+    if (!el) return
 
-    const parentNode = this.getParentElement(node)
+    const parentNode = this.getParentElement(el)
     if (!parentNode) return
 
     let offset;
 
     if (this.props.useWindow) {
-      const doc = document.documentElement || document.body.parentElement || document.body
+      const doc = document.documentElement || document.body.parentNode || document.body
       const scrollTop = window.pageYOffset || doc.scrollTop
 
-      offset = this.calculateOffset(node, scrollTop)
+      offset = this.calculateOffset(el, scrollTop)
     } else {
-      offset = node.scrollHeight - parentNode.scrollTop - parentNode.clientHeight
+      offset = el.scrollHeight - parentNode.scrollTop - parentNode.clientHeight
     }
 
-    if (offset < this.props.throttle) {
-      node.removeEventListener('scroll', this.scrollListener)
+    console.log('offset', offset)
 
-      this.props.loadMore(this.pageLoaded += 1)
-      this.loadingMore = true
+    if (offset < this.props.throttle) {
+      this.detachScrollListener()
+
+      if (this.props.loadMore) {
+        this.props.loadMore(this.pageLoaded += 1)
+        this.loadingMore = true
+      }
     }
   }
 
@@ -80,16 +93,20 @@ class InfiniteScroll extends Component<Props, any> {
   }
 
   detachScrollListener() {
-    const parentElement = this.getParentElement(this.scrollComponent)
+    const scrollEl = this.props.useWindow ? window : this.getParentElement(this.scrollComponent)
 
-    if (!parentElement) return
+    if (!scrollEl) return
 
-    parentElement.removeEventListener('scroll', this.scrollListener)
+    scrollEl.removeEventListener('scroll', this.scrollListener)
   }
 
   componentDidMount() {
     this.attachScrollListener()
     this.pageLoaded = this.props.pageStart || 0
+  }
+
+  componentDidUpdate() {
+    this.attachScrollListener()
   }
 
   componentWillUnmount() {
