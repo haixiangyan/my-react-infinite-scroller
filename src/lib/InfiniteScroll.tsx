@@ -48,8 +48,6 @@ class InfiniteScroll extends Component<Props, any> {
       offset = el.scrollHeight - parentNode.scrollTop - parentNode.clientHeight
     }
 
-    console.log('offset', offset)
-
     if (offset < this.props.throttle) {
       this.detachScrollListener()
 

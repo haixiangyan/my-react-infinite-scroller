@@ -7,9 +7,7 @@ let counter = 0
 const DivScroller = () => {
   const [items, setItems] = useState<string[]>([]);
 
-  const fetchMore = async (pageCount: number) => {
-    console.log('div scroller', pageCount)
-
+  const fetchMore = async () => {
     await delay(async () => {
       const newItems = []
 
@@ -23,7 +21,7 @@ const DivScroller = () => {
   }
 
   useEffect(() => {
-    fetchMore(0).then()
+    fetchMore().then()
   }, [])
 
   return (
