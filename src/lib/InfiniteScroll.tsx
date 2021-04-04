@@ -33,6 +33,7 @@ class InfiniteScroll extends Component<Props, any> {
   constructor(props: Props) {
     super(props);
     this.scrollListener = this.scrollListener.bind(this)
+    this.mousewheelListener = this.mousewheelListener.bind(this)
   }
 
   scrollListener() {
@@ -56,7 +57,7 @@ class InfiniteScroll extends Component<Props, any> {
     }
 
     if (offset < (this.props.throttle || 300)) {
-      this.detachScrollListener()
+      this.detachListeners()
       this.beforeScrollTop = parentNode.scrollTop
       this.beforeScrollHeight = parentNode.scrollHeight
 
@@ -64,6 +65,14 @@ class InfiniteScroll extends Component<Props, any> {
         this.props.loadMore(this.pageLoaded += 1)
         this.loadingMore = true
       }
+    }
+  }
+
+  mousewheelListener(e: Event) {
+    // 详见: https://stackoverflow.com/questions/47524205/random-high-content-download-time-in-chrome/47684257#47684257
+    // @ts-ignore mousewheel 事件里存在 deltaY
+    if (e.deltaY === 1) {
+      e.preventDefault()
     }
   }
 
@@ -89,7 +98,7 @@ class InfiniteScroll extends Component<Props, any> {
     return el && el.parentElement
   }
 
-  attachScrollListener() {
+  attachListeners() {
     const parentElement = this.getParentElement(this.scrollComponent)
 
     if (!parentElement || !this.props.hasMore) return
@@ -98,9 +107,18 @@ class InfiniteScroll extends Component<Props, any> {
 
     scrollEl.addEventListener('scroll', this.scrollListener)
     scrollEl.addEventListener('resize', this.scrollListener)
+    scrollEl.addEventListener('mousewheel', this.mousewheelListener)
   }
 
-  detachScrollListener() {
+  detachMousewheelListener() {
+    const scrollEl = this.props.useWindow ? window : this.scrollComponent?.parentElement
+
+    if (!scrollEl) return
+
+    scrollEl.removeEventListener('mousewheel', this.mousewheelListener)
+  }
+
+  detachListeners() {
     const scrollEl = this.props.useWindow ? window : this.getParentElement(this.scrollComponent)
 
     if (!scrollEl) return
@@ -110,7 +128,7 @@ class InfiniteScroll extends Component<Props, any> {
   }
 
   componentDidMount() {
-    this.attachScrollListener()
+    this.attachListeners()
     this.pageLoaded = this.props.pageStart || 0
   }
 
@@ -123,11 +141,12 @@ class InfiniteScroll extends Component<Props, any> {
         this.loadingMore = false
       }
     }
-    this.attachScrollListener()
+    this.attachListeners()
   }
 
   componentWillUnmount() {
-    this.detachScrollListener()
+    this.detachListeners()
+    this.detachMousewheelListener()
   }
 
   render() {
