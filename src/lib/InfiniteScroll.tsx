@@ -90,6 +90,7 @@ class InfiniteScroll extends Component<Props, any> {
     const scrollEl = this.props.useWindow ? window : parentElement
 
     scrollEl.addEventListener('scroll', this.scrollListener)
+    scrollEl.addEventListener('resize', this.scrollListener)
   }
 
   detachScrollListener() {
@@ -98,6 +99,7 @@ class InfiniteScroll extends Component<Props, any> {
     if (!scrollEl) return
 
     scrollEl.removeEventListener('scroll', this.scrollListener)
+    scrollEl.removeEventListener('resize', this.scrollListener)
   }
 
   componentDidMount() {
