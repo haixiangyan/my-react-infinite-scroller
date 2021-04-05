@@ -20,7 +20,7 @@
 const offset = 很长元素总高度 - 窗口距离顶部高度 - 窗口高度 = node.scrollHeight - parentNode.scrollTop - parentNode.clientHeight
 
 if (offset < this.props.threshold) {
-     private pageLoaded = 0 // 当前加载页数
+  this.props.loadMore()
 }
 ```
 
