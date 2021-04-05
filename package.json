@@ -17,11 +17,13 @@
     "typescript": "^4.1.2",
     "web-vitals": "^1.0.1"
   },
+  "homepage": "https://yanhaixiang.com/my-react-infinite-scroller",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "npm run build && gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -42,6 +44,6 @@
     ]
   },
   "devDependencies": {
-    "@types/react-infinite-scroller": "^1.2.1"
+    "gh-pages": "^3.1.0"
   }
 }
