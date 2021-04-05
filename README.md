@@ -1,5 +1,11 @@
 # 造一个 react-infinite-scroller 轮子
 
+> 文章源码: https://github.com/Haixiang6123/my-react-infinite-scroller
+>
+> 预览链接: http://yanhaixiang.com/my-react-infinite-scroller/
+>
+> 参考轮子: https://www.npmjs.com/package/react-infinite-scroller
+
 ![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/037c57bcf4f54845943e9309ef3251db~tplv-k3u1fbpfcp-zoom-1.image)
 
 **无限滚动**是一个开发时经常遇到的问题，比如 ant-design 的 List 组件里就推荐使用 [react-infinite-scroller](https://www.npmjs.com/package/react-infinite-scroller) 配合 List 组件一起使用。
